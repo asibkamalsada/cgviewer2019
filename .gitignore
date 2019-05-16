@@ -32,3 +32,5 @@
 *.app
 
 shader/fragment.glsl
+
+*.pro
