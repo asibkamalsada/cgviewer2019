@@ -1,0 +1,11 @@
+obj/main.o
+obj/Mainwindow.o
+obj/Scene.o
+obj/EditWidgets.o
+obj/Model.o
+obj/Light.o
+obj/Skybox.o
+obj/Sphere.o
+obj/moc_Mainwindow.o
+obj/moc_Scene.o
+obj/moc_EditWidgets.o
