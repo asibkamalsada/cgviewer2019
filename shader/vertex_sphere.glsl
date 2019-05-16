@@ -2,15 +2,10 @@
 
 in vec3 position;
 
-out vec3 hitPixel;
+out vec3 fragmentCameraSpace;
+out vec3 fragmentWorldSpace;
 
-out vec3 rotatedPosition;
-
-uniform mat4 viewMatrix, projectionMatrix;
-uniform mat3 rotationMatrix;
-uniform vec3 center;
-
-uniform float radius;
+uniform mat4 viewMatrix, projectionMatrix, rotationMatrix;
 
 void main(void)
 {
@@ -19,9 +14,11 @@ void main(void)
     hitPixel = (billBoard).xyz;
     gl_Position = projectionMatrix * billBoard;
     */
+    vec4 fragmentWorldSpaceAlpha = rotationMatrix * vec4(position, 1.0);
+    vec4 fragmentCameraSpaceAlpha = viewMatrix * fragmentWorldSpaceAlpha;
+    fragmentWorldSpace = fragmentWorldSpaceAlpha.xyz;
+    fragmentCameraSpace = fragmentCameraSpaceAlpha.xyz;
 
-    fragmentCameraSpace =
-
-    gl_Position = projectionMatrix * viewMatrix * vec4(rotationMatrix * position, 1.0);
+    gl_Position = projectionMatrix * fragmentCameraSpaceAlpha ;
     //gl_Position = projectionMatrix * mat4(rotationMatrix) * viewMatrix * vec4( position, 1.0);
 }

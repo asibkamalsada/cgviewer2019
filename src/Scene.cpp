@@ -588,7 +588,7 @@ void Scene::paintGL()
     //QMatrix3x3 rotationMatrix = QQuaternion::rotationTo(m_sphere->getNormal(), centerToCam).toRotationMatrix();
     QVector3D rotationEulerAngles = QQuaternion::rotationTo(m_sphere->getNormal(), centerToCam).toEulerAngles();
     rotationEulerAngles.setZ(0);
-    QMatrix3x3 rotationMatrix = QQuaternion::fromEulerAngles(rotationEulerAngles).toRotationMatrix();
+    QMatrix4x4 rotationMatrix = QMatrix4x4{QQuaternion::fromEulerAngles(rotationEulerAngles).toRotationMatrix()};
 
 
     m_sphereProgram->bind();

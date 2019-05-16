@@ -10,7 +10,7 @@ Sphere::Sphere()
 {
     center = QVector3D(0.0, 0.0, 0.0);
     radius = 1.0;
-    color = QVector3D(1.0, 0.25, 0.25);
+    color = QVector3D(0.0, 0.25, 1.0);
 
     QVector3D p1 = center + QVector3D{radius, radius, 0}; //oben rechts
     QVector3D p2 = center + QVector3D{-radius, radius, 0}; //gegen den Uhrzeigersinn
