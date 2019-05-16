@@ -33,4 +33,5 @@
 
 shader/fragment.glsl
 
-*.pro
+CGViewer.pro
+CGViewer.pro.user
