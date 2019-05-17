@@ -22,13 +22,14 @@ Skybox::Skybox() {
     gl.glActiveTexture(GL_TEXTURE0);
 
 
-    QString sky = "skybox/blue/bkg1_";
+    QString sky_blue = "skybox/blue/bkg1_";
     QString text = "skybox/text/";
     QString given_example = "skybox/";
     QString yannick = "skybox/yannick/";
     QString amin = "skybox/amin/";
+    QString ha = "skybox/h+a/";
 
-    QString prefix = sky;
+    QString prefix = sky_blue;
 
     skyImages.resize(6);
     skyImages[0] = std::unique_ptr<QImage>(new QImage(QString(prefix + "right.png")));

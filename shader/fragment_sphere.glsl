@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec4 fragmentCameraSpaceAlpha;
-in vec3 fragmentWorldSpace;
+in vec4 fragmentWorldSpaceAlpha;
 
 uniform vec3 color;
 uniform float radius;
@@ -33,7 +33,7 @@ void main(void)
     // - p / 2 + sqrt(pow((p/2),2) - q)
     //
 
-
+/*
 
     vec3 viewCenter = (viewMatrix * vec4(center, 1.0)).xyz;
 
@@ -46,7 +46,9 @@ void main(void)
         discard;
     } else {
         finalColor = vec4(color, 1.0);
-    }
+    }*/
 
+
+    finalColor = vec4(color, 1.0);
 
 }

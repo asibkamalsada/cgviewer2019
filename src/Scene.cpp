@@ -585,8 +585,8 @@ void Scene::paintGL()
     QVector3D right = QVector3D(m_view.row(0));
     QVector3D up = QVector3D(m_view.row(1));
 
-    std::cout << "right: " << right.x() << " , " << right.y() << " , " << right.z() << std::endl;
-    std::cout << "up: " << up.x() << " , " << up.y() << " , " << up.z() << std::endl;
+    //std::cout << "right: " << right.x() << " , " << right.y() << " , " << right.z() << std::endl;
+    //std::cout << "up: " << up.x() << " , " << up.y() << " , " << up.z() << std::endl;
 
     m_sphereProgram->bind();
     m_sphereProgram->setUniformValue("right", right);
