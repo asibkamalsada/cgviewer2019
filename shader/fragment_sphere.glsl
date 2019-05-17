@@ -1,6 +1,7 @@
 #version 330 core
 
-in vec3 fragmentCameraSpace, fragmentWorldSpace;
+in vec4 fragmentCameraSpaceAlpha;
+in vec3 fragmentWorldSpace;
 
 uniform vec3 color;
 uniform float radius;
@@ -12,7 +13,7 @@ out vec4 finalColor;
 
 void main(void)
 {
-
+/*
         vec3 viewCenter = (viewMatrix * vec4(center, 1.0)).xyz;
         vec3 rayVector = normalize(fragmentCameraSpace - camPos);
         float t = 0;
@@ -28,15 +29,15 @@ void main(void)
                 finalColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
 
-
+*/
     // - p / 2 + sqrt(pow((p/2),2) - q)
     //
 
-/*
+
 
     vec3 viewCenter = (viewMatrix * vec4(center, 1.0)).xyz;
 
-    float p = 2 * dot(fragmentCameraSpace,  - viewCenter);
+    float p = 2 * dot(fragmentCameraSpaceAlpha.xyz,  - viewCenter);
     float q = dot( - viewCenter,  - viewCenter) - radius * radius;
 
     float d = pow(p,2) - 4*q;
@@ -47,5 +48,5 @@ void main(void)
         finalColor = vec4(color, 1.0);
     }
 
-*/
+
 }

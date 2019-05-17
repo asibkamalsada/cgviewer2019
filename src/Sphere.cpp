@@ -19,6 +19,9 @@ Sphere::Sphere()
 
     normal = QVector3D::normal(p3 - p2, p1 - p2);
 
+
+    std::cout << "normal: " << normal.x() << " , " << normal.y() << " , " << normal.z() << std::endl;
+
     sphere_data.resize(6);
 
     sphere_data[0] = p1;
@@ -49,6 +52,7 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
     program->setUniformValue("radius", radius);
     program->setUniformValue("center", center);
     program->setUniformValue("color", color);
+    program->setUniformValue("normal", normal);
     glDrawArrays(GL_TRIANGLES, 0, 2 * 3);
     program->release();
 }
