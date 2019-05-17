@@ -20,7 +20,7 @@ void main(void)
     gl_Position = projectionMatrix * billBoard;
     */
 
-    fragmentCameraSpace =
+    //fragmentCameraSpace =
 
     gl_Position = projectionMatrix * viewMatrix * vec4(rotationMatrix * position, 1.0);
     //gl_Position = projectionMatrix * mat4(rotationMatrix) * viewMatrix * vec4( position, 1.0);
