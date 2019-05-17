@@ -24,6 +24,7 @@ void main(void)
     vec3 centerToCamXZPlaneNormalized = normalize(vec3(centerToCam.x , 0, centerToCam.z));
     float angleCosine = dot(normal, centerToCamXZPlaneNormalized);
     vec3 upAux = cross(normal, centerToCamXZPlaneNormalized);
+
     */
 //----------------------------------------------------------------------------------------------
     /*
