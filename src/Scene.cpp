@@ -485,6 +485,14 @@ void Scene::paintGL()
     m_skybox->render(m_skyboxProgram, cameraPosition);
     m_skyboxProgram->release();
 
+//---------------------------------------------------------------------------------------------------------------------
+
+    m_sphereProgram->bind();
+
+    m_sphereProgram->setUniformValue("viewMatrix", m_view);
+    m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
+    m_sphere->render(m_sphereProgram);
+    m_sphereProgram->release();
 
 //---------------------------------------------------------------------------------------------------------------------
 /*
@@ -549,10 +557,6 @@ void Scene::paintGL()
             m_program->setUniformValue("lightsSize", lightsSize);
             m_program->setUniformValue("cameraPosition", cameraPosition);
 
-
-
-
-
             m_models[i]->render(m_program);
             m_program->release();
 
@@ -560,45 +564,6 @@ void Scene::paintGL()
     }
 
 
-    QVector3D centerToCam = cameraPosition - m_sphere->getCenter();
-    centerToCam.normalize();
-    QMatrix4x4 rotationMatrix;
-    rotationMatrix = QMatrix4x4{QQuaternion::rotationTo(m_sphere->getNormal(), centerToCam).toRotationMatrix()};
-    QVector3D rotationEulerAngles = QQuaternion::rotationTo(m_sphere->getNormal(), centerToCam).toEulerAngles();
-    //rotationEulerAngles.setZ(0);
-    //rotationEulerAngles.setY(0);
-    //rotationMatrix = QMatrix4x4{QQuaternion::fromEulerAngles(rotationEulerAngles).toRotationMatrix()};
-
-
-
-
-    //QVector3D centerToCamXZPlaneNormalized = QVector3D{centerToCam.x(), 0, centerToCam.z()}.normalized();
-    //float angleCosine = QVector3D::dotProduct(m_sphere->getNormal(), centerToCamXZPlaneNormalized);
-    //QVector3D upAux = QVector3D::crossProduct(m_sphere->getNormal(), centerToCamXZPlaneNormalized);
-
-    //std::cout << "before: " << upAux.x() << " , " << upAux.y() << " , " << upAux.z() << std::endl;
-
-    //glRotatef(acos(angleCosine) * 180 / 3.14, upAux.x(), upAux.y(), upAux.z());
-    //std::cout << "after: " << upAux.x() << " , " << upAux.y() << " , " << upAux.z() << std::endl;
-
-
-    QVector3D right = QVector3D(m_view.row(0));
-    QVector3D up = QVector3D(m_view.row(1));
-
-    //std::cout << "right: " << right.x() << " , " << right.y() << " , " << right.z() << std::endl;
-    //std::cout << "up: " << up.x() << " , " << up.y() << " , " << up.z() << std::endl;
-
-    m_sphereProgram->bind();
-    m_sphereProgram->setUniformValue("right", right);
-    m_sphereProgram->setUniformValue("up", up);
-
-
-    m_sphereProgram->setUniformValue("rotationMatrix", rotationMatrix);
-    m_sphereProgram->setUniformValue("camPos", cameraPosition);
-    m_sphereProgram->setUniformValue("viewMatrix", m_view);
-    m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
-    m_sphere->render(m_sphereProgram);
-    m_sphereProgram->release();
 
 
 

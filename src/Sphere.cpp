@@ -9,18 +9,13 @@
 Sphere::Sphere()
 {
     center = QVector3D(0.0, 0.0, 0.0);
-    radius = 5.0;
-    color = QVector3D(0.0, 0.25, 0.75);
+    radius = 2.0;
+    color  = QVector3D(0.5, 0.1, 0.0);
 
-    QVector3D p1 = center + QVector3D{radius, radius, 0}; //oben rechts
-    QVector3D p2 = center + QVector3D{-radius, radius, 0}; //gegen den Uhrzeigersinn
-    QVector3D p3 = center + QVector3D{-radius, -radius, 0};
-    QVector3D p4 = center + QVector3D{radius, -radius, 0};
-
-    normal = QVector3D::normal(p3 - p2, p1 - p2);
-
-
-    std::cout << "normal: " << normal.x() << " , " << normal.y() << " , " << normal.z() << std::endl;
+    QVector3D p1 = QVector3D{2 * radius, 2 * radius, 0}; //oben rechts
+    QVector3D p2 = QVector3D{2 * -radius, 2 * radius, 0}; //gegen den Uhrzeigersinn
+    QVector3D p3 = QVector3D{2 * -radius, 2 * -radius, 0};
+    QVector3D p4 = QVector3D{2 * radius, 2 * -radius, 0};
 
     sphere_data.resize(6);
 
@@ -52,7 +47,6 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
     program->setUniformValue("radius", radius);
     program->setUniformValue("center", center);
     program->setUniformValue("color", color);
-    program->setUniformValue("normal", normal);
     glDrawArrays(GL_TRIANGLES, 0, 2 * 3);
     program->release();
 }

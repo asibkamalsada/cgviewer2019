@@ -1,54 +1,67 @@
 #version 330 core
 
-in vec4 fragmentCameraSpaceAlpha;
-in vec4 fragmentWorldSpaceAlpha;
+in vec3 fragmentCameraSpace;
+in vec3 fragmentWorldSpace;
 
 uniform vec3 color;
 uniform float radius;
 uniform vec3 center;
-uniform vec3 camPos;
-uniform mat4 viewMatrix;
+
+uniform mat4 viewMatrix, projectionMatrix;
 
 out vec4 finalColor;
 
 void main(void)
 {
-/*
-        vec3 viewCenter = (viewMatrix * vec4(center, 1.0)).xyz;
-        vec3 rayVector = normalize(fragmentCameraSpace - camPos);
-        float t = 0;
-        float b = dot(2 * rayVector, camPos - viewCenter);
-        float c = pow(length(camPos - viewCenter), 2) - pow(radius, 2);
-        float D = pow(b, 2) - 4*c;
-        if( D > 0) {
-                t = ((-b) + sqrt(D))/2;
-                vec3 p = camPos + t * rayVector;
-                vec3 normal = normalize(p - viewCenter);
-                finalColor = vec4( dot(normal, normalize(p - camPos)) * color, 1.0 );
+
+    vec3 centerCameraSpace = (viewMatrix * vec4(center, 1.0)).xyz;
+
+
+    // source: http://viclw17.github.io/2018/07/16/raytracing-ray-sphere-intersection/
+    // difference to source:
+    // A: ray source, B: ray direction, t: ray factor,
+    // P: point on sphere, C: center of sphere
+
+    vec3 rayDirection = normalize(fragmentCameraSpace);
+
+    float a = dot(rayDirection, rayDirection); // is very close to 1 since the direction is normalized
+    float b = 2 * dot(rayDirection, - centerCameraSpace);
+    float c = dot(centerCameraSpace, centerCameraSpace) - radius *radius;
+    float d = b*b - 4 * a * c;
+
+    if(d > - 0.0001){
+        float t1 = (-b + sqrt(d)) / (2 * a);
+        float t2 = (-b - sqrt(d)) / (2 * a);
+        float t = t1 < 0 ? (t2 < 0 ? 0 : t2) : (t2 < 0 ? t1 : min(t1, t2));
+
+        vec3 pointOnSphereCameraSpace = t * rayDirection;
+
+
+
+        // der neue depth wert berechnet sich aus dem Verhältnis vom billboard.z (fragmentCameraSpace.z)
+        // zu spherePoint.z (pointOnSphereCameraSpace.z), also um wie viel weiter es nach vorn gerutscht ist, so viel
+        // weiter muss der Wert von gl_FragDepth bzw. gl_FragCoord.z (äquivalente Werte) auch nach vorn rücken
+        // jedoch ist gl_FragDepth ein output und gl_FragCoord ein input (not sure about that tho)
+        gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
+        finalColor = vec4(dot(-rayDirection, normalize(pointOnSphereCameraSpace - centerCameraSpace)) * color, //float*vec3
+                          1.0);
+
+
+        /* some funny testing
+        if (gl_FragCoord.z < 0.001){
+            finalColor = vec4(1.0);
+        } else if (gl_FragCoord.z < 0.5) {
+            finalColor = vec4(0.0, 1.0, 0.0, 1.0);
+        } else if (gl_FragCoord.z < 0.99){
+            finalColor = vec4(1.0, 0.0, 0.0, 1.0);
         } else {
-                finalColor = vec4(0.0, 0.0, 0.0, 0.0);
+            finalColor = vec4(0.0, 0.0, 1.0, 1.0);
         }
 
-*/
-    // - p / 2 + sqrt(pow((p/2),2) - q)
-    //
+        //gl_FragDepth = 0.5;
+        */
 
-/*
-
-    vec3 viewCenter = (viewMatrix * vec4(center, 1.0)).xyz;
-
-    float p = 2 * dot(fragmentCameraSpaceAlpha.xyz,  - viewCenter);
-    float q = dot( - viewCenter,  - viewCenter) - radius * radius;
-
-    float d = pow(p,2) - 4*q;
-
-    if (d < 0){
-        discard;
     } else {
-        finalColor = vec4(color, 1.0);
-    }*/
-
-
-    finalColor = vec4(color, 1.0);
-
+        discard;
+    }
 }
