@@ -11,6 +11,16 @@ uniform mat4 viewMatrix, projectionMatrix;
 
 out vec4 finalColor;
 
+float linearDepth(in float zw)
+{
+    return projectionMatrix[2][2] / (zw - projectionMatrix[2][3]);
+}
+
+float nonLinearDepth(in float input){
+    return projectionMatrix[2][2] / input + projectionMatrix[2][3];
+}
+
+
 void main(void)
 {
 
@@ -37,15 +47,44 @@ void main(void)
         vec3 pointOnSphereCameraSpace = t * rayDirection;
 
 
+        gl_FragDepth = nonLinearDepth(pointOnSphereCameraSpace.z);
 
+
+/*
+        float near = 0.1f;
+        float far = 400.0f;
+
+        float ndc_z = gl_FragCoord.z;
+        float linearDepth = (2.0f * near * far) / (far + near - ndc_z * (far - near)) ;
+*/
+
+
+        //------------------------------------------------------------------------------------------------------
+/*
+        float z_ndc = (projectionMatrix * vec4(pointOnSphereCameraSpace, 1.0)).z;
+        float z = (z_ndc + 1) / 2;
+
+        gl_FragDepth = z / -pointOnSphereCameraSpace.z;
+*/
+
+/*
+        float aa = projectionMatrix[2][2];
+        float bb = projectionMatrix[3][2];
+
+        float z_eye = bb / (aa + 2.0 * gl_FragCoord.z - 1.0);
+        gl_FragDepth = ((bb / pointOnSphereCameraSpace.z) + 1.0 - aa) / 2;
+*/
         // der neue depth wert berechnet sich aus dem Verhältnis vom billboard.z (fragmentCameraSpace.z)
         // zu spherePoint.z (pointOnSphereCameraSpace.z), also um wie viel weiter es nach vorn gerutscht ist, so viel
         // weiter muss der Wert von gl_FragDepth bzw. gl_FragCoord.z (äquivalente Werte) auch nach vorn rücken
         // jedoch ist gl_FragDepth ein output und gl_FragCoord ein input (not sure about that tho)
-        gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
+        //gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
+
+//        gl_FragDepth = ((1/pointOnSphereCameraSpace.z - 1/near) / (1/far - 1/near) + 1 )/ 2;
+
         finalColor = vec4(dot(-rayDirection, normalize(pointOnSphereCameraSpace - centerCameraSpace)) * color, //float*vec3
                           1.0);
-
+        //finalColor = vec4(vec3(linearDepth/far), 1.0);
 
         /* some funny testing
         if (gl_FragCoord.z < 0.001){
