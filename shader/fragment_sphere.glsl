@@ -11,6 +11,7 @@ uniform mat4 viewMatrix, projectionMatrix;
 
 out vec4 finalColor;
 
+/*
 float linearDepth(in float zw)
 {
     return projectionMatrix[2][2] / (zw - projectionMatrix[2][3]);
@@ -19,7 +20,7 @@ float linearDepth(in float zw)
 float nonLinearDepth(in float input){
     return projectionMatrix[2][2] / input + projectionMatrix[2][3];
 }
-
+*/
 
 void main(void)
 {
@@ -47,7 +48,7 @@ void main(void)
         vec3 pointOnSphereCameraSpace = t * rayDirection;
 
 
-        gl_FragDepth = nonLinearDepth(pointOnSphereCameraSpace.z);
+        //gl_FragDepth = nonLinearDepth(pointOnSphereCameraSpace.z);
 
 
 /*
@@ -78,7 +79,7 @@ void main(void)
         // zu spherePoint.z (pointOnSphereCameraSpace.z), also um wie viel weiter es nach vorn gerutscht ist, so viel
         // weiter muss der Wert von gl_FragDepth bzw. gl_FragCoord.z (äquivalente Werte) auch nach vorn rücken
         // jedoch ist gl_FragDepth ein output und gl_FragCoord ein input (not sure about that tho)
-        //gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
+        gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
 
 //        gl_FragDepth = ((1/pointOnSphereCameraSpace.z - 1/near) / (1/far - 1/near) + 1 )/ 2;
 
