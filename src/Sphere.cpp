@@ -8,7 +8,7 @@
 
 Sphere::Sphere()
 {
-    center = QVector3D(0.0, 0.0, 0.0);
+    center = QVector3D(5.0, 0.0, 0.0);
     radius = 2.0;
     color  = QVector3D(0.5, 0.1, 0.0);
 

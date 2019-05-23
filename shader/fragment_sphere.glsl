@@ -40,52 +40,32 @@ void main(void)
     float c = dot(centerCameraSpace, centerCameraSpace) - radius *radius;
     float d = b*b - 4 * a * c;
 
-    if(d > - 0.0001){
+    if(d > - 0.0000001){
         float t1 = (-b + sqrt(d)) / (2 * a);
         float t2 = (-b - sqrt(d)) / (2 * a);
         float t = t1 < 0 ? (t2 < 0 ? 0 : t2) : (t2 < 0 ? t1 : min(t1, t2));
 
         vec3 pointOnSphereCameraSpace = t * rayDirection;
 
+        // transform to Clip Space (this is the position the vertex shader normally puts out
+        vec4 pointOnSphereClipSpace = projectionMatrix * vec4(pointOnSphereCameraSpace, 1.0);
 
-        //gl_FragDepth = nonLinearDepth(pointOnSphereCameraSpace.z);
+        //// https://www.khronos.org/opengl/wiki/Vertex_Post-Processing
 
+        // normalized device coordinates as a pre step where
+        float zNDC = pointOnSphereClipSpace.z / pointOnSphereClipSpace.w;
 
-/*
-        float near = 0.1f;
-        float far = 400.0f;
+        // gl_FragCoord is normally in window / screen space
+        float zWindowSpace = (gl_DepthRange.far - gl_DepthRange.near) / 2 * zNDC
+                                + (gl_DepthRange.far + gl_DepthRange.near) / 2;
 
-        float ndc_z = gl_FragCoord.z;
-        float linearDepth = (2.0f * near * far) / (far + near - ndc_z * (far - near)) ;
-*/
+        ////
 
+        gl_FragDepth = zWindowSpace;
 
-        //------------------------------------------------------------------------------------------------------
-/*
-        float z_ndc = (projectionMatrix * vec4(pointOnSphereCameraSpace, 1.0)).z;
-        float z = (z_ndc + 1) / 2;
-
-        gl_FragDepth = z / -pointOnSphereCameraSpace.z;
-*/
-
-/*
-        float aa = projectionMatrix[2][2];
-        float bb = projectionMatrix[3][2];
-
-        float z_eye = bb / (aa + 2.0 * gl_FragCoord.z - 1.0);
-        gl_FragDepth = ((bb / pointOnSphereCameraSpace.z) + 1.0 - aa) / 2;
-*/
-        // der neue depth wert berechnet sich aus dem Verhältnis vom billboard.z (fragmentCameraSpace.z)
-        // zu spherePoint.z (pointOnSphereCameraSpace.z), also um wie viel weiter es nach vorn gerutscht ist, so viel
-        // weiter muss der Wert von gl_FragDepth bzw. gl_FragCoord.z (äquivalente Werte) auch nach vorn rücken
-        // jedoch ist gl_FragDepth ein output und gl_FragCoord ein input (not sure about that tho)
-        gl_FragDepth = pointOnSphereCameraSpace.z / fragmentCameraSpace.z * gl_FragCoord.z;
-
-//        gl_FragDepth = ((1/pointOnSphereCameraSpace.z - 1/near) / (1/far - 1/near) + 1 )/ 2;
 
         finalColor = vec4(dot(-rayDirection, normalize(pointOnSphereCameraSpace - centerCameraSpace)) * color, //float*vec3
                           1.0);
-        //finalColor = vec4(vec3(linearDepth/far), 1.0);
 
         /* some funny testing
         if (gl_FragCoord.z < 0.001){
