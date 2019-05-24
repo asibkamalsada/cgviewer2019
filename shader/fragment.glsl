@@ -35,7 +35,7 @@ void main(void)
 
 
     // changed texture2D to texture, should work on latest OpenGL now 
-    vec3 textureColor = texture(texture, textureUV).rgb;
+    vec3 textureColor = texture2D(texture, textureUV).rgb;
 
     vec3 lightedColor = ambient + diffuse + specular;
 

@@ -21,6 +21,7 @@ class Skybox
 public:
     Skybox();
     virtual void render(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D cameraPosition);
+    void bindTexture();
 
     std::shared_ptr<QOpenGLTexture> texture;
 

@@ -25,11 +25,9 @@ Skybox::Skybox() {
     QString sky_blue = "skybox/blue/bkg1_";
     QString text = "skybox/text/";
     QString given_example = "skybox/";
-    QString yannick = "skybox/yannick/";
-    QString amin = "skybox/amin/";
-    QString ha = "skybox/h+a/";
 
-    QString prefix = sky_blue;
+
+    QString prefix = given_example;
 
     skyImages.resize(6);
     skyImages[0] = std::unique_ptr<QImage>(new QImage(QString(prefix + "right.png")));
@@ -72,13 +70,20 @@ void Skybox::render(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D cam
 
     program->setUniformValue("cameraPosition", cameraPosition);
 
+    bindTexture();
+
+    //program->setUniformValue("textureCube", 0);
+    glDisable(GL_DEPTH_TEST);
+    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+    glEnable(GL_DEPTH_TEST);
+
+}
+
+void Skybox::bindTexture(){
+
     texture->bind(0);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture->textureId());
 
-    program->setUniformValue("textureCube", 0);
-    glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
-    glEnable(GL_DEPTH_TEST);
 
 }

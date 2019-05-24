@@ -8,7 +8,7 @@
 
 Sphere::Sphere()
 {
-    center = QVector3D(5.0, 0.0, 0.0);
+    center = QVector3D(0.0, 5.0, 0.0);
     radius = 2.0;
     color  = QVector3D(0.5, 0.1, 0.0);
 
@@ -47,8 +47,10 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
     program->setUniformValue("radius", radius);
     program->setUniformValue("center", center);
     program->setUniformValue("color", color);
+
     glDrawArrays(GL_TRIANGLES, 0, 2 * 3);
     program->release();
+
 }
 
 

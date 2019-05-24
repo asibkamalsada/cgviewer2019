@@ -491,6 +491,8 @@ void Scene::paintGL()
 
     m_sphereProgram->setUniformValue("viewMatrix", m_view);
     m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
+    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
+    m_skybox->bindTexture();
     m_sphere->render(m_sphereProgram);
     m_sphereProgram->release();
 
