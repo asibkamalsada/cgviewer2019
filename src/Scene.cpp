@@ -233,18 +233,22 @@ Scene::loadShaders(QString vertexShaderSource, QString fragmentShaderSource) {
 }
 
 void Scene::reloadShader() {
-  m_program = loadShaders(QString("shader/vertex.glsl"),
+    m_program = loadShaders(QString("shader/vertex.glsl"),
                           QString("shader/fragment.glsl"));
-  m_program2 = loadShaders(QString("shader/vertex.glsl"),
+    m_program2 = loadShaders(QString("shader/vertex.glsl"),
                            QString("shader/fragment2.glsl"));
-  m_skyboxProgram = loadShaders(QString("shader/vertex_skybox.glsl"),
+    m_skyboxProgram = loadShaders(QString("shader/vertex_skybox.glsl"),
                                 QString("shader/fragment_skybox.glsl"));
-  m_backgroundProgram = loadShaders(QString("shader/vertex_background.glsl"),
+    m_backgroundProgram = loadShaders(QString("shader/vertex_background.glsl"),
                                     QString("shader/fragment_background.glsl"));
-  m_backgroundProgram2 = loadShaders(QString("shader/vertex_skybox.glsl"),
+    m_backgroundProgram2 = loadShaders(QString("shader/vertex_skybox.glsl"),
                                     QString("shader/fragment_background_lines.glsl"));
-  m_sphereProgram = loadShaders(QString("shader/vertex_sphere.glsl"),
+    m_sphereProgram = loadShaders(QString("shader/vertex_sphere.glsl"),
                                 QString("shader/fragment_sphere.glsl"));
+    m_contourProgram = loadShaders(QString("shader/vertex_contour.glsl"),
+                                   QString("shader/fragment_contour.glsl"));
+    m_stencilProgram = loadShaders(QString("shader/vertex_stencil.glsl"),
+                                   QString("shader/fragment_stencil.glsl"));
 }
 
 void Scene::setFloor() { showFloor = !showFloor; }
@@ -252,7 +256,6 @@ void Scene::setFloor() { showFloor = !showFloor; }
 void Scene::initializeGL() {
 
     m_skybox = std::make_shared<Skybox>();
-    m_sphere = std::make_shared<Sphere>();
 
     vao.create();
     vao.bind();
@@ -267,6 +270,7 @@ void Scene::initializeGL() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_LIGHTING);
+    glEnable(GL_STENCIL_TEST);
     reloadShader();
 
 
@@ -444,6 +448,7 @@ void Scene::paintGL()
      */
 
     //clear the screen
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     //glEnable(GL_MULTISAMPLE);
 
@@ -486,17 +491,6 @@ void Scene::paintGL()
     m_skyboxProgram->release();
 
 //---------------------------------------------------------------------------------------------------------------------
-
-    m_sphereProgram->bind();
-
-    m_sphereProgram->setUniformValue("viewMatrix", m_view);
-    m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
-    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
-    m_skybox->bindTexture();
-    m_sphere->render(m_sphereProgram);
-    m_sphereProgram->release();
-
-//---------------------------------------------------------------------------------------------------------------------
 /*
     m_backgroundProgram2->bind();
     m_backgroundProgram2->enableAttributeArray("position");
@@ -523,17 +517,73 @@ void Scene::paintGL()
     m_program->bind();
     m_program->setUniformValue("texture", 0);
     m_program->release();
-    //render all models
-    //the floor is always the first model, so if (floor == false), we simply start the rendering
-    //with the second model
+
+//---------------------------------------------------------------------------------------------------------------------
+// https://en.wikibooks.org/wiki/OpenGL_Programming/Stencil_buffer
+//---------------------------------------------------------------------------------------------------------------------
+
+
+    glStencilMask(0xFF);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_STENCIL_TEST);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glDepthMask(GL_FALSE);
+    glStencilFunc(GL_NEVER, 1, 0xFF);
+    glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);  // draw 1s on test fail (always)
+
+    // draw stencil pattern
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);  // needs mask=0xFF
+
+    size_t h;
+    for (showFloor ? h = 1 : h = 0; h < m_models.size(); ++h){
+        m_stencilProgram->bind();
+
+        m_stencilProgram->setUniformValue("modelMatrix", m_models[h]->getTransformations());
+        m_stencilProgram->setUniformValue("viewMatrix", m_view);
+        m_stencilProgram->setUniformValue("projectionMatrix", m_projection);
+
+        m_models[h]->render(m_stencilProgram);
+
+        m_stencilProgram->release();
+    }
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glStencilMask(0x00);
+    // draw where stencil's value is 0
+    glStencilFunc(GL_EQUAL, 0, 0xFF);
+
+    size_t q;
+    for (showFloor ? q=1 : q=0; q < m_models.size(); ++q){
+        m_contourProgram->bind();
+
+        m_contourProgram->setUniformValue("modelMatrix", m_models[q]->getTransformations());
+        m_contourProgram->setUniformValue("viewMatrix", m_view);
+        m_contourProgram->setUniformValue("projectionMatrix", m_projection);
+
+
+        m_models[q]->render(m_contourProgram);
+
+        m_contourProgram->release();
+    }
+
+
+    // draw only where stencil's value is 1
+    glStencilFunc(GL_EQUAL, 1, 0xFF);
+
+    glDisable(GL_STENCIL_TEST);
+
+
     size_t i;
     for (showFloor ? i=0 : i=1; i < m_models.size(); ++i)
     {
         QMatrix4x4 modelMatrix = m_models[i]->getTransformations();
-        QMatrix4x4 normalMatrix = ((m_view * modelMatrix).inverted()).transposed();
+        //QMatrix4x4 normalMatrix = ((m_view * modelMatrix).inverted()).transposed();
 
         // render the selected model
-        if (m_selectedModel == i) {
+        if (m_selectedModel == i)
+        {
             m_program2->bind();
 
             m_program2->setUniformValue("modelMatrix", modelMatrix);
@@ -543,11 +593,13 @@ void Scene::paintGL()
             m_models[i]->render(m_program2);
             m_program2->release();
         }
-        else {
+        else
+        {
+
             m_program->bind();
             // set the matrix pipeline
 
-            m_program->setUniformValue("normalMatrix", normalMatrix);
+            //m_program->setUniformValue("normalMatrix", normalMatrix);
             m_program->setUniformValue("modelMatrix", modelMatrix);
             m_program->setUniformValue("viewMatrix", m_view);
             m_program->setUniformValue("projectionMatrix", m_projection);
@@ -561,12 +613,37 @@ void Scene::paintGL()
 
             m_models[i]->render(m_program);
             m_program->release();
-
         }
     }
 
 
+//---------------------------------------------------------------------------------------------------------------------
 
+    std::shared_ptr<Sphere> m_sphere1 = std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 5.0);
 
+    std::vector<std::shared_ptr<Sphere>> spheres{
+        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
+        std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
+        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
+        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
+    };
+
+    int animationTimeInSeconds = 4;
+    int refreshRate = 30;
+
+    float velocity = 10.0 / refreshRate; // coordinates per frame
+
+    m_sphereProgram->bind();
+    m_sphereProgram->setUniformValue("viewMatrix", m_view);
+    m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
+    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
+    int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
+    m_sphereProgram->setUniformValue("frame", animationFrame);
+    m_sphereProgram->setUniformValue("moveStep", QVector3D(0, velocity, 0));
+    m_skybox->bindTexture();
+    for(auto&& sphere: spheres){
+        sphere->render(m_sphereProgram);
+    }
+    m_sphereProgram->release();
 
 }

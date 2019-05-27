@@ -20,7 +20,7 @@
 class Sphere
 {
 public:
-    Sphere();
+    Sphere(QVector3D m_center, float m_radius);
     virtual void render(std::shared_ptr<QOpenGLShaderProgram> program);
     QVector3D getCenter();
     QVector3D getNormal();
