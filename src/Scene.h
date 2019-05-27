@@ -86,10 +86,10 @@ private:
 
 
   std::shared_ptr<Skybox> m_skybox;
-  std::shared_ptr<Sphere> m_sphere;
+
 
   // the "main" Shader program
-  std::shared_ptr<QOpenGLShaderProgram> m_program, m_program2, m_skyboxProgram, m_sphereProgram, m_backgroundProgram, m_backgroundProgram2;
+  std::shared_ptr<QOpenGLShaderProgram> m_stencilProgram, m_contourProgram, m_program, m_program2, m_skyboxProgram, m_sphereProgram, m_backgroundProgram, m_backgroundProgram2;
   // the transformation matrices
   QMatrix4x4 m_view, m_projection;
   // function to set the matrices according to camera movement

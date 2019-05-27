@@ -3,13 +3,18 @@
 in vec3 position;
 
 out vec3 fragmentCameraSpace;
+out vec3 movedCenter;
 
+uniform int frame;
 uniform mat4 viewMatrix, projectionMatrix;
 uniform vec3 center;
+uniform vec3 moveStep;
 
 
 void main(void)
 {
+
+    movedCenter = center + float(frame) * moveStep;
 
     // source: https://wiki.delphigl.com/index.php/Sph%C3%A4risches_Billboard
     // this seems to be the same: http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/#solution-2--the-3d-way
@@ -29,7 +34,7 @@ void main(void)
 
     // this one is good too but there has to be something more elegant
 
-    vec4 fragmentCameraSpaceAlpha = viewMatrix * vec4(center + (position.x * right + position.y * up), 1.0);
+    vec4 fragmentCameraSpaceAlpha = viewMatrix * vec4(movedCenter + (position.x * right + position.y * up), 1.0);
     gl_Position = projectionMatrix * fragmentCameraSpaceAlpha;
 
     fragmentCameraSpace = fragmentCameraSpaceAlpha.xyz;
