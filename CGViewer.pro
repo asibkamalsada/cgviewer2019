@@ -18,6 +18,7 @@ QMAKE_CXXFLAGS += -std=c++0x
 
 SOURCES     +=  src/main.cpp\
                 src/Mainwindow.cpp \
+                src/Portal.cpp \
                 src/Scene.cpp \
                 src/EditWidgets.cpp \
                 src/Model.cpp \
@@ -27,6 +28,7 @@ SOURCES     +=  src/main.cpp\
 
 HEADERS     +=  src/Mainwindow.h \
                 src/CGTypes.h \
+                src/Portal.h \
                 src/Scene.h \
                 src/EditWidgets.h \
                 src/Model.h \
@@ -51,14 +53,11 @@ CONFIG += c++11
 LIBS += -lopengl32
 
 DISTFILES += \
-    shader/fragment_background.glsl \
     shader/fragment_background_lines.glsl \
-    shader/fragment_contour.glsl \
+    shader/fragment_black.glsl \
+    shader/fragment_portal.glsl \
     shader/fragment_skybox.glsl \
     shader/fragment_sphere.glsl \
-    shader/fragment_stencil.glsl \
-    shader/vertex_background.glsl \
     shader/vertex_contour.glsl \
     shader/vertex_skybox.glsl \
-    shader/vertex_sphere.glsl \
-    shader/vertex_stencil.glsl
+    shader/vertex_sphere.glsl

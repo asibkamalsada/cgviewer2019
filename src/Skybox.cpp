@@ -25,6 +25,7 @@ Skybox::Skybox() {
     QString sky_blue = "skybox/blue/bkg1_";
     QString text = "skybox/text/";
     QString given_example = "skybox/";
+    QString black = "skybox/black/";
 
 
     QString prefix = given_example;
