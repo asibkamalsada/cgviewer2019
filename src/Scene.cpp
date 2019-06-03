@@ -241,6 +241,8 @@ void Scene::reloadShader() {
                                 QString("shader/fragment_skybox.glsl"));
     m_blackProgram = loadShaders(QString("shader/vertex.glsl"),
                                     QString("shader/fragment_black.glsl"));
+    m_whiteProgram = loadShaders(QString("shader/vertex.glsl"),
+                                 QString("shader/fragment_white.glsl"));
     m_backgroundProgram2 = loadShaders(QString("shader/vertex_skybox.glsl"),
                                     QString("shader/fragment_background_lines.glsl"));
     m_sphereProgram = loadShaders(QString("shader/vertex_sphere.glsl"),
@@ -255,6 +257,15 @@ void Scene::setFloor() { showFloor = !showFloor; }
 
 void Scene::initializeGL() {
 
+    spheres =  {
+
+        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
+        std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
+        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
+        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
+
+    };
+
     m_skybox = std::make_shared<Skybox>();
     m_portal = std::make_shared<Portal>(QVector3D(0, 4, -10), 4);
 
@@ -268,10 +279,11 @@ void Scene::initializeGL() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_FRONT);
     glDisable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_LIGHTING);
-    glEnable(GL_STENCIL_TEST);
+    //glEnable(GL_STENCIL_TEST);
     reloadShader();
 
 
@@ -544,12 +556,12 @@ void Scene::paintGL()
 
         // render the selected model
         if (i == 0){
-            m_blackProgram->bind();
-            m_blackProgram->setUniformValue("viewMatrix", m_view);
-            m_blackProgram->setUniformValue("projectionMatrix", m_projection);
-            m_blackProgram->setUniformValue("modelMatrix", modelMatrix);
-            m_models[i]->render(m_blackProgram);
-            m_blackProgram->release();
+            m_program->bind();
+            m_program->setUniformValue("viewMatrix", m_view);
+            m_program->setUniformValue("projectionMatrix", m_projection);
+            m_program->setUniformValue("modelMatrix", modelMatrix);
+            m_models[i]->render(m_program);
+            m_program->release();
         } else if (m_selectedModel == i)
         {
             m_program2->bind();
@@ -563,6 +575,19 @@ void Scene::paintGL()
         }
         else
         {
+
+            glEnable(GL_CULL_FACE);
+
+            m_contourProgram->bind();
+
+            m_contourProgram->setUniformValue("modelMatrix", modelMatrix);
+            m_contourProgram->setUniformValue("viewMatrix", m_view);
+            m_contourProgram->setUniformValue("projectionMatrix", m_projection);
+
+            m_models[i]->render(m_contourProgram);
+
+            m_contourProgram->release();
+            glDisable(GL_CULL_FACE);
 
             m_program->bind();
             // set the matrix pipeline
@@ -581,11 +606,13 @@ void Scene::paintGL()
 
             m_models[i]->render(m_program);
             m_program->release();
+
+
         }
     }
 
 
-
+/*
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthMask(GL_TRUE);
     glStencilMask(0x00);
@@ -593,7 +620,7 @@ void Scene::paintGL()
     glStencilFunc(GL_EQUAL, 0, 0xFF);
 
     size_t q;
-    for (showFloor ? q=1 : q=0; q < m_models.size(); ++q){
+    for (q = 1; q < m_models.size(); ++q){
         m_contourProgram->bind();
 
         m_contourProgram->setUniformValue("modelMatrix", m_models[q]->getTransformations());
@@ -613,23 +640,16 @@ void Scene::paintGL()
     glDisable(GL_STENCIL_TEST);
 
 
-
+*/
 
 //---------------------------------------------------------------------------------------------------------------------
 
-    std::vector<std::shared_ptr<Sphere>> spheres {
-
-        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
-        std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
-        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
-        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
-
-    };
 
     int animationTimeInSeconds = 4;
     int refreshRate = 30;
 
     float velocity = 10.0 / refreshRate; // coordinates per frame
+    //velocity = 0;
 
     m_sphereProgram->bind();
     m_sphereProgram->setUniformValue("viewMatrix", m_view);
@@ -646,6 +666,7 @@ void Scene::paintGL()
         sphere->render(m_sphereProgram);
     }
     m_sphereProgram->release();
+
 
     /*
 

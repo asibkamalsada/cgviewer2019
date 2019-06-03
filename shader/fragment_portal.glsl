@@ -27,7 +27,7 @@ void main(void)
     if ( distanceFromCenter > factor + radius - tolerance && distanceFromCenter < factor + radius )
     {
         //finalColor = vec4( 1.0 );
-        finalColor = texture2D(sampler, vec2(sqrt(frame), sqrt(frame)));
+        finalColor = texture(sampler, vec2(sqrt(frame), sqrt(frame)));
 /*    }
     else if ( distanceFromCenter > factor + radius )
     {

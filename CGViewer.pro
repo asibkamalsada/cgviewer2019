@@ -58,6 +58,7 @@ DISTFILES += \
     shader/fragment_portal.glsl \
     shader/fragment_skybox.glsl \
     shader/fragment_sphere.glsl \
+    shader/fragment_white.glsl \
     shader/vertex_contour.glsl \
     shader/vertex_skybox.glsl \
     shader/vertex_sphere.glsl

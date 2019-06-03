@@ -40,6 +40,8 @@ public:
   void saveScene(QString filepath);
   void loadScene(QString filepath);
 
+  std::vector<std::shared_ptr<Sphere>> spheres;
+
 protected:
   void initializeGL();
   void resizeGL(int width, int height);
@@ -64,6 +66,10 @@ protected slots:
   void wheelEvent(QWheelEvent *event);
 
 private:
+
+
+
+
   std::shared_ptr<QOpenGLShaderProgram>
   loadShaders(QString vertexShaderSource, QString fragmentShaderSource);
 
@@ -91,7 +97,7 @@ private:
 
 
   // the "main" Shader program
-  std::shared_ptr<QOpenGLShaderProgram> m_portalProgram, m_contourProgram, m_program, m_program2, m_skyboxProgram, m_sphereProgram, m_blackProgram, m_backgroundProgram2;
+  std::shared_ptr<QOpenGLShaderProgram> m_portalProgram, m_contourProgram, m_program, m_program2, m_skyboxProgram, m_sphereProgram, m_whiteProgram, m_blackProgram, m_backgroundProgram2;
   // the transformation matrices
   QMatrix4x4 m_view, m_projection;
   // function to set the matrices according to camera movement

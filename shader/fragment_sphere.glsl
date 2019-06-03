@@ -68,7 +68,7 @@ void main(void)
         vec3 enterNormalNormalized = normalize(enteringPointOnSphereWorldSpace - movedCenter);
         vec3 cameraToEnterNormalized = normalize(enteringPointOnSphereWorldSpace - cameraPosition);
 
-        float refractiveIndex = 1.2;
+        float refractiveIndex = 1.5;
         vec3 enteringRefractedDirectionNormalized = refract(cameraToEnterNormalized,
           enterNormalNormalized, 1.0 / refractiveIndex);
 
@@ -86,9 +86,9 @@ void main(void)
             // t2 = (-b - sqrt(d)) / (2 * a); can be ignored
             //
             // <-------y  =
-            //      =    ^   =
-            //     =       -  =
-            //     =         -x<------------   incoming ray
+            //      =    ^_  =
+            //     =       \_ =
+            //     =         \x<------------   incoming ray
             //      =        =
             //         =  =
             //
