@@ -207,6 +207,20 @@ private:
 
   // to measure the time since the program started (can be used for animation)
   int frame;
+
+
+  std::vector<std::shared_ptr<QOpenGLFramebufferObject>> sphere_cube;
+
+  std::vector<QMatrix4x4> viewMatrices = {
+      QMatrix4x4{},
+      QMatrix4x4{},
+      QMatrix4x4{},
+      QMatrix4x4{},
+      QMatrix4x4{},
+      QMatrix4x4{}
+  };
+
+
 };
 
 #endif // SCENE_H

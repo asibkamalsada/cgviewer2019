@@ -3,19 +3,17 @@
 in vec3 position;
 
 out vec3 fragmentCameraSpace;
-out vec3 movedCenter;
 
 uniform int frame;
 uniform float movementFactor;
 uniform mat4 viewMatrix, projectionMatrix;
-uniform vec3 center;
+uniform vec3 movedCenter;
 uniform vec3 moveStep;
 
 
 void main(void)
 {
 
-    movedCenter = center + float(frame) * moveStep;
     //movedCenter = center + movementFactor * moveStep;
 
     // source: https://wiki.delphigl.com/index.php/Sph%C3%A4risches_Billboard
