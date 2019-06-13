@@ -68,7 +68,9 @@ protected slots:
 private:
 
 
+  const int sphere_texture_width = 1024;
 
+  std::shared_ptr<QOpenGLTexture> texture;
 
   std::shared_ptr<QOpenGLShaderProgram>
   loadShaders(QString vertexShaderSource, QString fragmentShaderSource);
@@ -209,16 +211,15 @@ private:
   int frame;
 
 
-  std::vector<std::shared_ptr<QOpenGLFramebufferObject>> sphere_cube;
+  std::shared_ptr<QOpenGLFramebufferObject> frameBufferObject;
 
-  std::vector<QMatrix4x4> viewMatrices = {
-      QMatrix4x4{},
-      QMatrix4x4{},
-      QMatrix4x4{},
-      QMatrix4x4{},
-      QMatrix4x4{},
-      QMatrix4x4{}
-  };
+  QMatrix4x4 viewMatrix_cube;
+
+  QMatrix4x4 projectionMatrix_cube;
+
+  std::vector<QVector3D> faces_dir;
+
+  std::vector<QOpenGLTexture::CubeMapFace> faces_cube;
 
 
 };

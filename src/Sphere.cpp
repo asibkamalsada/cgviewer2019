@@ -54,8 +54,10 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
 }
 
 
-QVector3D Sphere::getCenter(){return center;}
+QVector3D Sphere::getMovedCenter(){return movedCenter;}
 
 void Sphere::moveCenter(QVector3D verschiebung){movedCenter = center + verschiebung;}
 
 QVector3D Sphere::getNormal(){return normal;}
+
+float Sphere::getRadius(){return radius;}
