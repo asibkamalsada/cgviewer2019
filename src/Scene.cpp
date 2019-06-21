@@ -266,15 +266,6 @@ void Scene::initializeGL() {
 
     };
 
-    sphere_cube = {
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
-        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D)
-    };
-
     m_skybox = std::make_shared<Skybox>();
     m_portal = std::make_shared<Portal>(QVector3D(0, 4, -10), 4);
 
@@ -459,8 +450,6 @@ void Scene::setTransformations() {
 
 void Scene::paintGL()
 {
-    QOpenGLFramebufferObject::bindDefault();
-
     const int MAX_LIGHTS = 3;
 
     ++frame;
@@ -565,6 +554,7 @@ void Scene::paintGL()
         QMatrix4x4 modelMatrix = m_models[i]->getTransformations();
         //QMatrix4x4 normalMatrix = ((m_view * modelMatrix).inverted()).transposed();
 
+        // render the selected model
         if (i == 0){
             m_program->bind();
             m_program->setUniformValue("viewMatrix", m_view);
@@ -657,16 +647,22 @@ void Scene::paintGL()
 
     int animationTimeInSeconds = 4;
     int refreshRate = 30;
-    int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
+
     float velocity = 10.0 / refreshRate; // coordinates per frame
+    //velocity = 0;
 
     m_sphereProgram->bind();
     m_sphereProgram->setUniformValue("viewMatrix", m_view);
     m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
     m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
+    int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
+    float movementFactor = sin(frame / 20);
+    m_sphereProgram->setUniformValue("frame", animationFrame);
+    //m_sphereProgram->setUniformValue("movementFactor", movementFactor);
+    m_sphereProgram->setUniformValue("moveStep", QVector3D(0, velocity, 0));
+    //m_sphereProgram->setUniformValue("moveStep", QVector3D(0, 40 * velocity, 0));
     m_skybox->bindTexture();
     for(auto&& sphere: spheres){
-        sphere->moveCenter(float(animationFrame) * QVector3D(0, velocity, 0));
         sphere->render(m_sphereProgram);
     }
     m_sphereProgram->release();

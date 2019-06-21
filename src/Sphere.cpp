@@ -9,7 +9,6 @@
 Sphere::Sphere(QVector3D m_center, float m_radius)
 {
     center = m_center;
-    movedCenter = m_center;
     radius = m_radius;
     color  = QVector3D(0.5, 0.1, 0.0);
 
@@ -46,7 +45,7 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
     positionBuffer.bind();
     program->setAttributeBuffer("position", GL_FLOAT, 0, 3);
     program->setUniformValue("radius", radius);
-    program->setUniformValue("movedCenter", movedCenter);
+    program->setUniformValue("center", center);
     program->setUniformValue("color", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 2 * 3);
@@ -55,7 +54,5 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
 
 
 QVector3D Sphere::getCenter(){return center;}
-
-void Sphere::moveCenter(QVector3D verschiebung){movedCenter = center + verschiebung;}
 
 QVector3D Sphere::getNormal(){return normal;}

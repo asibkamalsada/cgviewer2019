@@ -25,14 +25,13 @@ public:
     virtual void render(std::shared_ptr<QOpenGLShaderProgram> program);
     QVector3D getCenter();
     QVector3D getNormal();
-    void moveCenter(QVector3D verschiebung);
 
 private:
 
     QQuaternion rotationQuat;
     QGLFunctions gl;
     QOpenGLBuffer positionBuffer;
-    QVector3D center, movedCenter;
+    QVector3D center;
     QVector3D normal;
     float radius;
     QVector3D color;
