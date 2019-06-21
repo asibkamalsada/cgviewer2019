@@ -255,6 +255,53 @@ void Scene::reloadShader() {
 
 void Scene::setFloor() { showFloor = !showFloor; }
 
+void Scene::initializeGL() {
+
+    spheres =  {
+
+        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
+        std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
+        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
+        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
+
+    };
+
+    sphere_cube = {
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D),
+        std::make_shared<QOpenGLFramebufferObject>(256, 256, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D)
+    };
+
+    m_skybox = std::make_shared<Skybox>();
+    m_portal = std::make_shared<Portal>(QVector3D(0, 4, -10), 4);
+
+    vao.create();
+    vao.bind();
+
+    //glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glDepthFunc(GL_LEQUAL);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+    //glEnable(GL_STENCIL_TEST);
+    reloadShader();
+
+
+    resetScene();
+
+    OpenGLError();
+    triangleInit();
+}
+
 void Scene::triangleInit() {
 
   // AUFGABE 1: erzeugen Sie hier die Buffer und initialisieren sie alles
@@ -337,34 +384,34 @@ void Scene::mousePressEvent(QMouseEvent *event) {
 }
 
 void Scene::mouseDoubleClickEvent(QMouseEvent *event) {
-    // intersect ray with the bounding boxes of all models
-    // the functions for this technique are defined in CGFunctions.h
+  // intersect ray with the bounding boxes of all models
+  // the functions for this technique are defined in CGFunctions.h
 
-    // calculate intersections of ray in world space
-    QMatrix4x4 imvpMatrix = (m_projection * m_view).inverted();
-    QVector4D eyeRay_n = unprojectScreenCoordinates(
+  // calculate intersections of ray in world space
+  QMatrix4x4 imvpMatrix = (m_projection * m_view).inverted();
+  QVector4D eyeRay_n = unprojectScreenCoordinates(
       event->x(), event->y(), -1.0, width(), height(), imvpMatrix);
-    QVector4D eyeRay_z = unprojectScreenCoordinates(
+  QVector4D eyeRay_z = unprojectScreenCoordinates(
       event->x(), event->y(), 1.0, width(), height(), imvpMatrix);
-    float tnear, tfar;
-    float smallest_t = 1e33;
-    int nearestModel = -1;
-    for (size_t i = 0; i < m_models.size(); ++i) {
-        BoundingBox bb = m_models[i]->getBoundingBox();
-        if (intersectBox(eyeRay_n, eyeRay_z - eyeRay_n, bb.bbmin, bb.bbmax, &tnear, &tfar)) {
-            if (tnear < smallest_t) {
-                smallest_t = fabs(tnear);
-                nearestModel = i;
-            }
-        }
-    }/*
-    if (nearestModel >= 0 && (nearestModel != m_selectedModel)) {
-        m_selectedModel = nearestModel;
-        std::cout << "Model: " << m_models[m_selectedModel]->getName() << " was selected\n";
-    } else {
-        m_selectedModel = -1;
-    }*/
-    m_selectedModel = m_selectedModel != nearestModel ? nearestModel : -1;
+  float tnear, tfar;
+  float smallest_t = 1e33;
+  int nearestModel = -1;
+  for (size_t i = 0; i < m_models.size(); ++i) {
+    BoundingBox bb = m_models[i]->getBoundingBox();
+    if (intersectBox(eyeRay_n, eyeRay_z - eyeRay_n, bb.bbmin, bb.bbmax, &tnear,
+                     &tfar)) {
+      if (tnear < smallest_t) {
+        smallest_t = fabs(tnear);
+        nearestModel = i;
+      }
+    }
+  }
+  if (nearestModel >= 0 && (nearestModel != m_selectedModel)) {
+    m_selectedModel = nearestModel;
+    std::cout << "Model: " << m_models[m_selectedModel]->getName()
+              << " was selected\n";
+  } else
+    m_selectedModel = -1;
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent *event) {
@@ -394,10 +441,10 @@ void Scene::setZRotation(int angle) {
 }
 
 void Scene::normalizeAngle(int *angle) {
-    while (*angle < 0)
-        *angle += 360 * 16;
-    while (*angle > 360 * 16)
-        *angle -= 360 * 16;
+  while (*angle < 0)
+    *angle += 360 * 16;
+  while (*angle > 360 * 16)
+    *angle -= 360 * 16;
 }
 
 void Scene::setTransformations() {
@@ -410,68 +457,8 @@ void Scene::setTransformations() {
   m_view.rotate((zRot / 16.0f), 0.0f, 0.0f, 1.0f);
 }
 
-void Scene::initializeGL() {
-
-
-
-    faces_dir = {
-        QVector3D{1,0,0},
-        QVector3D{-1,0,0},
-        QVector3D{0,1,0},
-        QVector3D{0,-1,0},
-        QVector3D{0,0,1},
-        QVector3D{0,0,-1},
-
-    };
-
-    projectionMatrix_cube = QMatrix4x4();
-
-
-    viewMatrix_cube = QMatrix4x4();
-
-    spheres =  {
-
-        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
-        /*std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
-        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
-        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)*/
-
-    };
-
-    frameBufferObject = std::make_shared<QOpenGLFramebufferObject>(
-                sphere_texture_width, sphere_texture_width, QOpenGLFramebufferObject::Depth, GL_TEXTURE_2D);
-
-    m_skybox = std::make_shared<Skybox>();
-    m_portal = std::make_shared<Portal>(QVector3D(0, 4, -10), 4);
-
-    vao.create();
-    vao.bind();
-
-    //glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_FRONT);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_LIGHTING);
-    //glEnable(GL_STENCIL_TEST);
-    reloadShader();
-
-
-    resetScene();
-
-    OpenGLError();
-    triangleInit();
-}
-
 void Scene::paintGL()
 {
-
-
     QOpenGLFramebufferObject::bindDefault();
 
     const int MAX_LIGHTS = 3;
@@ -491,7 +478,6 @@ void Scene::paintGL()
 
     //set the view matrix
     setTransformations();
-
 
     QVector3D cameraPosition = (m_view.inverted() * QVector4D(0.0, 0.0, 0.0, 1.0)).toVector3DAffine();
 
@@ -560,7 +546,7 @@ void Scene::paintGL()
 // https://en.wikibooks.org/wiki/OpenGL_Programming/Stencil_buffer
 //---------------------------------------------------------------------------------------------------------------------
 
-/*
+
     glStencilMask(0xFF);
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
@@ -572,7 +558,7 @@ void Scene::paintGL()
     // draw stencil pattern
     glStencilMask(0xFF);
     glClear(GL_STENCIL_BUFFER_BIT);  // needs mask=0xFF
-*/
+
     size_t i;
     for (showFloor ? i=0 : i=1; i < m_models.size(); ++i)
     {
@@ -674,130 +660,16 @@ void Scene::paintGL()
     int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
     float velocity = 10.0 / refreshRate; // coordinates per frame
 
-
-
-
+    m_sphereProgram->bind();
+    m_sphereProgram->setUniformValue("viewMatrix", m_view);
+    m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
+    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
+    m_skybox->bindTexture();
     for(auto&& sphere: spheres){
-
         sphere->moveCenter(float(animationFrame) * QVector3D(0, velocity, 0));
-
-        texture = std::make_shared<QOpenGLTexture>(QOpenGLTexture::TargetCubeMap);
-
-        texture->create();
-        texture->setSize(sphere_texture_width,sphere_texture_width);
-        texture->setFormat(QOpenGLTexture::RGBA8_UNorm);
-        texture->allocateStorage();
-        texture->generateMipMaps();
-
-        for (unsigned int beta = 0; beta < 6; ++beta){
-
-            frameBufferObject->bind();
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-
-            viewMatrix_cube.setToIdentity();
-            viewMatrix_cube.lookAt(sphere->getMovedCenter(), sphere->getMovedCenter() + faces_dir[beta], QVector3D(0, 1, 0));
-
-            projectionMatrix_cube.perspective(90.0f, 1.0f, sphere->getRadius() + 0.1f, 450.0f);
-
-
-            m_skyboxProgram->bind();
-            m_skyboxProgram->setUniformValue("viewMatrix", viewMatrix_cube);
-            m_skyboxProgram->setUniformValue("projectionMatrix", projectionMatrix_cube);
-            m_skyboxProgram->setUniformValue("cameraPosition", cameraPosition);
-
-            m_skybox->render(m_skyboxProgram, cameraPosition);
-            m_skyboxProgram->release();
-
-            for (showFloor ? i=0 : i=1; i < m_models.size(); ++i)
-            {
-                QMatrix4x4 modelMatrix = m_models[i]->getTransformations();
-                //QMatrix4x4 normalMatrix = ((m_view * modelMatrix).inverted()).transposed();
-
-                if (i == 0){
-                    m_program->bind();
-                    m_program->setUniformValue("viewMatrix", viewMatrix_cube);
-                    m_program->setUniformValue("projectionMatrix", projectionMatrix_cube);
-                    m_program->setUniformValue("modelMatrix", modelMatrix);
-                    m_models[i]->render(m_program);
-                    m_program->release();
-                } else if (m_selectedModel == i)
-                {
-                    m_program2->bind();
-
-                    m_program2->setUniformValue("modelMatrix", modelMatrix);
-                    m_program2->setUniformValue("viewMatrix", viewMatrix_cube);
-                    m_program2->setUniformValue("projectionMatrix", projectionMatrix_cube);
-
-                    m_models[i]->render(m_program2);
-                    m_program2->release();
-                }
-                else
-                {
-
-                    glEnable(GL_CULL_FACE);
-
-                    m_contourProgram->bind();
-
-                    m_contourProgram->setUniformValue("modelMatrix", modelMatrix);
-                    m_contourProgram->setUniformValue("viewMatrix", viewMatrix_cube);
-                    m_contourProgram->setUniformValue("projectionMatrix", projectionMatrix_cube);
-
-                    m_models[i]->render(m_contourProgram);
-
-                    m_contourProgram->release();
-                    glDisable(GL_CULL_FACE);
-
-                    m_program->bind();
-                    // set the matrix pipeline
-
-                    //m_program->setUniformValue("normalMatrix", normalMatrix);
-                    m_program->setUniformValue("modelMatrix", modelMatrix);
-                    m_program->setUniformValue("viewMatrix", viewMatrix_cube);
-                    m_program->setUniformValue("projectionMatrix", projectionMatrix_cube);
-
-                    m_program->setUniformValueArray("lightsAmbientArray", lightsAmbientArray, lightsSize);
-                    m_program->setUniformValueArray("lightsDiffuseArray", lightsDiffuseArray, lightsSize);
-                    m_program->setUniformValueArray("lightsSpecularArray", lightsSpecularArray, lightsSize);
-                    m_program->setUniformValueArray("lightsPositionArray", lightsPositionArray, lightsSize);
-                    m_program->setUniformValue("lightsSize", lightsSize);
-                    m_program->setUniformValue("cameraPosition", cameraPosition);
-
-                    m_models[i]->render(m_program);
-                    m_program->release();
-
-
-                }
-            }
-
-            //temp_image.save(QString("D:\\Kamalsada\\Documents\\Asib\\repos\\cgviewer2019\\extractedimages\\temp_image.png"));
-
-
-            texture->setData(0, 0, QOpenGLTexture::CubeMapFace(QOpenGLTexture::CubeMapPositiveX + beta), QOpenGLTexture::RGBA, QOpenGLTexture::UInt8,
-                             frameBufferObject->toImage().convertToFormat(QImage::Format_RGBA8888).constBits());
-
-        }
-
-        texture->bind(0);
-
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture->textureId());
-
-
-        QOpenGLFramebufferObject::bindDefault();
-
-        m_sphereProgram->bind();
-        m_sphereProgram->setUniformValue("viewMatrix", m_view);
-        m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
-        m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
-
         sphere->render(m_sphereProgram);
-
-
-
     }
     m_sphereProgram->release();
-
 
 
     /*
