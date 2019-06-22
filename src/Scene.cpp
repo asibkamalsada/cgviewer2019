@@ -257,12 +257,25 @@ void Scene::setFloor() { showFloor = !showFloor; }
 
 void Scene::initializeGL() {
 
+    environmentMappingProjectionMatrix.setToIdentity();
+
+    environmentMappingProjectionMatrix.perspective(60.0f, 1.0f, 10.0f, 400.0f);
+
+    environmentMappingViewMatrices.resize(6);
+
+    environmentMappingViewMatrices[0].rotate(90.0f, 0.0f, 1.0f, 0.0f);
+    environmentMappingViewMatrices[1].rotate(270.0f, 0.0f, 1.0f, 0.0f);
+    environmentMappingViewMatrices[2].rotate(270.0f, 1.0f, 0.0f, 0.0f);
+    environmentMappingViewMatrices[3].rotate(90.0f, 1.0f, 0.0f, 0.0f);
+    environmentMappingViewMatrices[4].rotate(180.0f, 0.0f, 1.0f, 0.0f);
+
+
     spheres =  {
 
-        std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
+        //std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
         std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
-        std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
-        std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
+        //std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
+        //std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
 
     };
 
@@ -536,18 +549,6 @@ void Scene::paintGL()
 //---------------------------------------------------------------------------------------------------------------------
 
 
-    glStencilMask(0xFF);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_STENCIL_TEST);
-    //glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    //glDepthMask(GL_FALSE);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);  // draw 1s on test success (always) and depth test success
-
-    // draw stencil pattern
-    glStencilMask(0xFF);
-    glClear(GL_STENCIL_BUFFER_BIT);  // needs mask=0xFF
-
     size_t i;
     for (showFloor ? i=0 : i=1; i < m_models.size(); ++i)
     {
@@ -649,21 +650,35 @@ void Scene::paintGL()
     int refreshRate = 30;
 
     float velocity = 10.0 / refreshRate; // coordinates per frame
-    //velocity = 0;
+    int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
+    float movementFactor = sin(frame / 20);
 
     m_sphereProgram->bind();
     m_sphereProgram->setUniformValue("viewMatrix", m_view);
     m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
-    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
-    int animationFrame = abs((frame  % (refreshRate * animationTimeInSeconds)) - (0.5 * refreshRate * animationTimeInSeconds));
-    float movementFactor = sin(frame / 20);
-    m_sphereProgram->setUniformValue("frame", animationFrame);
-    //m_sphereProgram->setUniformValue("movementFactor", movementFactor);
-    m_sphereProgram->setUniformValue("moveStep", QVector3D(0, velocity, 0));
-    //m_sphereProgram->setUniformValue("moveStep", QVector3D(0, 40 * velocity, 0));
-    m_skybox->bindTexture();
+    m_sphereProgram->release();
+
+
+    m_program->bind();
+    m_program->setUniformValue("projectionMatrix", environmentMappingProjectionMatrix);
+    m_program->setUniformValue("cameraPosition", cameraPosition);
+
+
+    //m_skybox->bindTexture();
+    QVector3D movedCenter;
+
     for(auto&& sphere: spheres){
-        sphere->render(m_sphereProgram);
+        movedCenter = sphere->getCenter() + float(animationFrame) * QVector3D(0, velocity, 0);
+
+        m_program->bind();
+        for (auto&& viewMatrix: translateViewMatrices(movedCenter)){
+            m_program->setUniformValue("viewMatrix", viewMatrix);
+        }
+        m_program->release();
+
+        m_sphereProgram->bind();
+        sphere->render(m_sphereProgram, movedCenter);
+        m_sphereProgram->release();
     }
     m_sphereProgram->release();
 
@@ -682,7 +697,13 @@ void Scene::paintGL()
     m_portalProgram->release();
 
     */
-
-
-
 }
+
+std::vector<QMatrix4x4> Scene::translateViewMatrices(QVector3D cameraCenter){
+    std::vector<QMatrix4x4> returnMatrices(environmentMappingViewMatrices);
+    for (auto&& viewMatrix : returnMatrices){
+        viewMatrix.translate(-cameraCenter);
+    }
+    return returnMatrices;
+}
+

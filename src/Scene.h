@@ -54,6 +54,7 @@ public slots:
   void reloadShader();
   void resetScene();
   void setFloor();
+  std::vector<QMatrix4x4> translateViewMatrices(QVector3D cameraCenter);
 
   void triangleInit();
 
@@ -67,6 +68,9 @@ protected slots:
 
 private:
 
+
+  QMatrix4x4 environmentMappingProjectionMatrix;
+  std::vector<QMatrix4x4> environmentMappingViewMatrices;
 
 
 

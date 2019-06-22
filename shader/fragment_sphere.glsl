@@ -7,7 +7,7 @@ uniform int frame;
 uniform vec3 moveStep;
 
 uniform float radius;
-in vec3 movedCenter;
+uniform vec3 movedCenter;
 
 uniform mat4 viewMatrix, projectionMatrix;
 

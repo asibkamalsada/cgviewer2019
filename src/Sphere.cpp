@@ -38,14 +38,15 @@ Sphere::Sphere(QVector3D m_center, float m_radius)
 
 }
 
-void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program)
+void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D movedCenter)
 {
 
     program->enableAttributeArray("position");
     positionBuffer.bind();
     program->setAttributeBuffer("position", GL_FLOAT, 0, 3);
     program->setUniformValue("radius", radius);
-    program->setUniformValue("center", center);
+    //std::cout << movedCenter.x() << " " << movedCenter.y() << " " << movedCenter.z() << std::endl;
+    program->setUniformValue("movedCenter", movedCenter);
     program->setUniformValue("color", color);
 
     glDrawArrays(GL_TRIANGLES, 0, 2 * 3);

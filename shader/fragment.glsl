@@ -65,21 +65,9 @@ void main(void)
         specular += matSpecular * lightsSpecularArray[i] * specularCelFactor;
     }
 
-    //float edgeDetection = (fragmentNormalNormalized.y != 0 && fragmentNormalNormalized.x != 0 && dot(normalize(cameraPosition - worldSpacePosition), fragmentNormalNormalized) > 0.4) ? 1 : 0;
-    float edgeDetection = 1;
-
-    // changed texture2D to texture, should work on latest OpenGL now 
-    vec3 textureColor = texture(texture, textureUV).rgb;
+    vec3 textureColor = texture2D(texture, textureUV).rgb;
 
     vec3 lightedColor = ambient + diffuse + specular;
-/*
-    float luminance = dot(lightedColor,vec3(0.2126, 0.7152, 0.0722));
-    float gradient = fwidth(luminance );
-    edgeDetection = gradient < 0.00001 ? 1 : 0;
-*/
-    //edgeDetection = 1;
-
-    lightedColor = lightedColor * edgeDetection;
 
     if (textureUV.x < 0 || textureUV.y < 0 ) {
             //finalColor = vec4(lightedColor.z, lightedColor.y, lightedColor.x, alpha);
