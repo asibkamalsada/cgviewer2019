@@ -23,6 +23,7 @@ class Sphere
 public:
     Sphere(QVector3D m_center, float m_radius);
     virtual void render(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D movedCenter);
+    virtual void renderBox(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D movedCenter);
     QVector3D getCenter();
     QVector3D getNormal();
 
@@ -46,6 +47,58 @@ private:
         QVector3D(-1.0f, 1.0f, 0.0f),
         QVector3D(1.0f, -1.0f, 0.0f), // triangle 2 : end
     }*/;
+
+    std::vector<QVector3D> sphereBoxed = {
+        QVector3D(-1.0f,1.0f,-1.0f), // triangle 1 : begin
+        QVector3D(-1.0f,-1.0f, -1.0f),
+        QVector3D(-1.0f, -1.0f, 1.0f), // triangle 1 : end
+
+        QVector3D(-1.0f,1.0f,-1.0f),// 5
+        QVector3D(-1.0f, -1.0f, 1.0f),
+        QVector3D(-1.0f, 1.0f,1.0f),
+
+        QVector3D(-1.0f,-1.0f,-1.0f),
+        QVector3D(-1.0f, 1.0f,-1.0f), // triangle 2 : end
+        QVector3D(1.0f, 1.0f,-1.0f), // triangle 2 : begin
+
+        QVector3D(-1.0f,-1.0f,-1.0f),
+        QVector3D(1.0f, 1.0f,-1.0f),// 4
+        QVector3D(1.0f,-1.0f,-1.0f),
+
+        QVector3D(-1.0f,-1.0f,-1.0f),
+        QVector3D(-1.0f,-1.0f,1.0f),
+        QVector3D(1.0f,-1.0f, 1.0f), // 3
+
+        QVector3D(-1.0f,-1.0f,-1.0f),
+        QVector3D(1.0f,-1.0f, 1.0f),// 6
+        QVector3D(1.0f,-1.0f, -1.0f),
+
+        QVector3D(-1.0f,-1.0f, 1.0f),
+        QVector3D(-1.0f,1.0f, 1.0f),
+        QVector3D( 1.0f, 1.0f, 1.0f),// 7
+
+        QVector3D(-1.0f, -1.0f, 1.0f),// 12
+        QVector3D(1.0f, 1.0f, 1.0f),
+        QVector3D(1.0f,-1.0f, 1.0f),
+
+        QVector3D(1.0f,1.0f,-1.0f), // triangle 1 : begin
+        QVector3D(1.0f,-1.0f, -1.0f),
+        QVector3D(1.0f, -1.0f, 1.0f), // triangle 1 : end
+
+        QVector3D(1.0f,1.0f,-1.0f),// 5
+        QVector3D(1.0f, -1.0f, 1.0f),
+        QVector3D(1.0f, 1.0f,1.0f),
+
+        QVector3D(-1.0f, 1.0f,-1.0f),
+        QVector3D(-1.0f, 1.0f, 1.0f),// 10
+        QVector3D(1.0f, 1.0f,1.0f),
+
+        QVector3D(-1.0f, 1.0f,-1.0f),
+        QVector3D(1.0f, 1.0f, 1.0f),
+        QVector3D(1.0f, 1.0f, -1.0f)// 11
+    };
+
+
 
 };
 

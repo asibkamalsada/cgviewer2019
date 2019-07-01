@@ -35,6 +35,12 @@ Sphere::Sphere(QVector3D m_center, float m_radius)
     positionBuffer.release();
 
 
+    for (auto&& vect : sphereBoxed){
+        std::cout << vect.x() << std::endl;
+        vect = vect * 2 * radius;
+        std::cout << vect.x() << std::endl;
+    }
+
 
 }
 
@@ -53,6 +59,28 @@ void Sphere::render(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D mov
 
 }
 
+void Sphere::renderBox(std::shared_ptr<QOpenGLShaderProgram> program, QVector3D movedCenter)
+{
+    positionBuffer = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+    positionBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    positionBuffer.create();
+    positionBuffer.bind();
+    positionBuffer.allocate(&sphereBoxed[0], sphereBoxed.size() * sizeof(QVector3D));
+    positionBuffer.release();
+
+
+    program->bind();
+    program->enableAttributeArray("position");
+    positionBuffer.bind();
+    program->setAttributeBuffer("position", GL_FLOAT, 0, 3);
+
+    program->setUniformValue("cameraPosition", movedCenter);
+
+    //program->setUniformValue("textureCube", 0);
+    //glDisable(GL_DEPTH_TEST);
+    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+    //glEnable(GL_DEPTH_TEST);
+}
 
 QVector3D Sphere::getCenter(){return center;}
 

@@ -28,7 +28,7 @@ Skybox::Skybox() {
     QString black = "skybox/black/";
 
 
-    QString prefix = given_example;
+    QString prefix = text;
 
     skyImages.resize(6);
     skyImages[0] = std::unique_ptr<QImage>(new QImage(QString(prefix + "right.png")));

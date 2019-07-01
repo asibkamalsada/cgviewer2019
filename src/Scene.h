@@ -68,6 +68,11 @@ protected slots:
 
 private:
 
+  std::shared_ptr<QOpenGLTexture> environmentTexture;
+
+  std::shared_ptr<QOpenGLFramebufferObject> tempFBO;
+
+  std::vector<QImage> environmentCubeImages;
 
   QMatrix4x4 environmentMappingProjectionMatrix;
   std::vector<QMatrix4x4> environmentMappingViewMatrices;

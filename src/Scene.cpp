@@ -218,11 +218,11 @@ std::shared_ptr<QOpenGLShaderProgram>
 Scene::loadShaders(QString vertexShaderSource, QString fragmentShaderSource) {
   auto pr = std::make_shared<QOpenGLShaderProgram>();
   pr->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShaderSource);
-  qDebug() << "Compile VertexShader: ";
+  qDebug() << "Compile VertexShader " << vertexShaderSource << ": ";
   qDebug() << pr->log();
 
   pr->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentShaderSource);
-  qDebug() << "Compile FragmentShader: ";
+  qDebug() << "Compile FragmentShader " << fragmentShaderSource << ": ";
   qDebug() << pr->log();
 
   pr->link();
@@ -257,23 +257,27 @@ void Scene::setFloor() { showFloor = !showFloor; }
 
 void Scene::initializeGL() {
 
-    environmentMappingProjectionMatrix.setToIdentity();
+    environmentTexture = std::make_shared<QOpenGLTexture>(QOpenGLTexture::TargetCubeMap);
 
-    environmentMappingProjectionMatrix.perspective(60.0f, 1.0f, 10.0f, 400.0f);
+    environmentTexture->create();
+    environmentTexture->setSize(1024.0f,1024.0f);
+    environmentTexture->setFormat(QOpenGLTexture::RGBA8_UNorm);
+    environmentTexture->allocateStorage();
+
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::Depth);
+    format.setTextureTarget(GL_TEXTURE_2D);
+
+    tempFBO = std::make_shared<QOpenGLFramebufferObject>(1024.0f, 1024.0f, format);
 
     environmentMappingViewMatrices.resize(6);
 
-    environmentMappingViewMatrices[0].rotate(90.0f, 0.0f, 1.0f, 0.0f);
-    environmentMappingViewMatrices[1].rotate(270.0f, 0.0f, 1.0f, 0.0f);
-    environmentMappingViewMatrices[2].rotate(270.0f, 1.0f, 0.0f, 0.0f);
-    environmentMappingViewMatrices[3].rotate(90.0f, 1.0f, 0.0f, 0.0f);
-    environmentMappingViewMatrices[4].rotate(180.0f, 0.0f, 1.0f, 0.0f);
-
+    environmentCubeImages.resize(6);
 
     spheres =  {
 
         //std::make_shared<Sphere>(QVector3D(0.0, -10.0,-10.0), 1.0),
-        std::make_shared<Sphere>(QVector3D(20.0, -9.0,-20.0), 6.0),
+        std::make_shared<Sphere>(QVector3D( 0.0f, 0.0f, 0.0f ), 6.0),
         //std::make_shared<Sphere>(QVector3D(-17.0, -10.0,-15.0), 3.0),
         //std::make_shared<Sphere>(QVector3D(-10.0, -5.0,-10.0), 4.0)
 
@@ -328,9 +332,12 @@ void Scene::triangleInit() {
 void Scene::resizeGL(int width, int height) {
   glViewport(0, 0, width, height);
   qreal aspect = qreal(width) / qreal(height ? height : 1);
-  const qreal zNear = 0.1f, zFar = 400.0f, fov = 60.0f;
+  //aspect = 1.0f;
+  const qreal zNear = 0.1f, zFar = 400.0f, fov = 60.0f, fov_environment = 90.0f;
   m_projection.setToIdentity();
   m_projection.perspective(fov, aspect, zNear, zFar);
+  environmentMappingProjectionMatrix.setToIdentity();
+  environmentMappingProjectionMatrix.perspective(fov_environment, 1.0f, zNear, zFar);
 }
 
 void Scene::mouseMoveEvent(QMouseEvent *event) {
@@ -463,6 +470,8 @@ void Scene::setTransformations() {
 
 void Scene::paintGL()
 {
+    QOpenGLFramebufferObject::bindDefault();
+
     const int MAX_LIGHTS = 3;
 
     ++frame;
@@ -555,15 +564,7 @@ void Scene::paintGL()
         QMatrix4x4 modelMatrix = m_models[i]->getTransformations();
         //QMatrix4x4 normalMatrix = ((m_view * modelMatrix).inverted()).transposed();
 
-        // render the selected model
-        if (i == 0){
-            m_program->bind();
-            m_program->setUniformValue("viewMatrix", m_view);
-            m_program->setUniformValue("projectionMatrix", m_projection);
-            m_program->setUniformValue("modelMatrix", modelMatrix);
-            m_models[i]->render(m_program);
-            m_program->release();
-        } else if (m_selectedModel == i)
+        if (m_selectedModel == i)
         {
             m_program2->bind();
 
@@ -577,18 +578,20 @@ void Scene::paintGL()
         else
         {
 
-            glEnable(GL_CULL_FACE);
+            if(i != 0){
+                glEnable(GL_CULL_FACE);
 
-            m_contourProgram->bind();
+                m_contourProgram->bind();
 
-            m_contourProgram->setUniformValue("modelMatrix", modelMatrix);
-            m_contourProgram->setUniformValue("viewMatrix", m_view);
-            m_contourProgram->setUniformValue("projectionMatrix", m_projection);
+                m_contourProgram->setUniformValue("modelMatrix", modelMatrix);
+                m_contourProgram->setUniformValue("viewMatrix", m_view);
+                m_contourProgram->setUniformValue("projectionMatrix", m_projection);
 
-            m_models[i]->render(m_contourProgram);
+                m_models[i]->render(m_contourProgram);
 
-            m_contourProgram->release();
-            glDisable(GL_CULL_FACE);
+                m_contourProgram->release();
+                glDisable(GL_CULL_FACE);
+            }
 
             m_program->bind();
             // set the matrix pipeline
@@ -656,12 +659,14 @@ void Scene::paintGL()
     m_sphereProgram->bind();
     m_sphereProgram->setUniformValue("viewMatrix", m_view);
     m_sphereProgram->setUniformValue("projectionMatrix", m_projection);
+    m_sphereProgram->setUniformValue("cameraPosition", cameraPosition);
     m_sphereProgram->release();
 
 
     m_program->bind();
     m_program->setUniformValue("projectionMatrix", environmentMappingProjectionMatrix);
     m_program->setUniformValue("cameraPosition", cameraPosition);
+    m_program->release();
 
 
     //m_skybox->bindTexture();
@@ -670,13 +675,91 @@ void Scene::paintGL()
     for(auto&& sphere: spheres){
         movedCenter = sphere->getCenter() + float(animationFrame) * QVector3D(0, velocity, 0);
 
-        m_program->bind();
-        for (auto&& viewMatrix: translateViewMatrices(movedCenter)){
-            m_program->setUniformValue("viewMatrix", viewMatrix);
+        tempFBO->bind();
+
+        for (unsigned int currentSideCounter = 0; currentSideCounter < 6; ++currentSideCounter){
+
+            QMatrix4x4 currentViewMatrix;
+
+            currentViewMatrix.setToIdentity();
+
+            currentViewMatrix.translate(-movedCenter);
+
+            switch (currentSideCounter) {
+
+            case 0:
+                currentViewMatrix.rotate(90.0f, 0.0f, 1.0f, 0.0f);
+                break;
+            case 1:
+                currentViewMatrix.rotate(270.0f, 0.0f, 1.0f, 0.0f);
+                break;
+            case 2:
+                currentViewMatrix.rotate(270.0f, 1.0f, 0.0f, 0.0f);
+                break;
+            case 3:
+                currentViewMatrix.rotate(90.0f, 1.0f, 0.0f, 0.0f);
+                break;
+            case 4:
+                currentViewMatrix.rotate(180.0f, 0.0f, 1.0f, 0.0f);
+                break;
+            }
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+            m_skyboxProgram->bind();
+            m_skyboxProgram->setUniformValue("viewMatrix", currentViewMatrix);
+            m_skyboxProgram->setUniformValue("projectionMatrix", environmentMappingProjectionMatrix);
+
+            m_skybox->render(m_skyboxProgram, cameraPosition);
+            m_skyboxProgram->release();
+
+            m_program->bind();
+
+            m_program->setUniformValue("viewMatrix", currentViewMatrix);
+
+            int teta;
+            for (showFloor ? teta = 0 : teta = 1; teta < m_models.size(); ++teta){
+
+                m_program->setUniformValue("modelMatrix", m_models[teta]->getTransformations());
+
+                m_program->setUniformValueArray("lightsAmbientArray", lightsAmbientArray, lightsSize);
+                m_program->setUniformValueArray("lightsDiffuseArray", lightsDiffuseArray, lightsSize);
+                m_program->setUniformValueArray("lightsSpecularArray", lightsSpecularArray, lightsSize);
+                m_program->setUniformValueArray("lightsPositionArray", lightsPositionArray, lightsSize);
+                m_program->setUniformValue("lightsSize", lightsSize);
+                m_program->setUniformValue("cameraPosition", movedCenter);
+
+                m_models[teta]->render(m_program);
+            }
+            m_program->release();
+
+
+            environmentTexture->setData(0,
+                                        0,
+                                        QOpenGLTexture::CubeMapFace(QOpenGLTexture::CubeMapPositiveX + currentSideCounter),
+                                        QOpenGLTexture::RGBA,
+                                        QOpenGLTexture::UInt8,
+                                        tempFBO->toImage().convertToFormat(QImage::Format_RGBA8888).constBits());
+            environmentTexture->generateMipMaps();
+
+
         }
-        m_program->release();
+
+        QOpenGLFramebufferObject::bindDefault();
+
 
         m_sphereProgram->bind();
+        //m_skyboxProgram->bind();
+
+        environmentTexture->bind(0);
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, environmentTexture->textureId());
+
+        //m_skybox->bindTexture();
+
+        //sphere->render(m_skyboxProgram, movedCenter);
+        //m_skyboxProgram->release();
+
         sphere->render(m_sphereProgram, movedCenter);
         m_sphereProgram->release();
     }
